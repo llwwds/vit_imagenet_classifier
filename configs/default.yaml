@@ -1,0 +1,41 @@
+# =============================================================================
+# configs/default.yaml — ResNet-34 项目配置文件
+# 所有超参数集中在此,修改实验时只需改这个文件,无需动代码
+# =============================================================================
+
+# ── 数据配置 ──────────────────────────────────────────────────────────────────
+data:
+  root:            "dataset/imagenet"   # 数据集根目录
+  batch_size:      1024                 # 训练 batch size (FP16 下显存约 10-12GB)
+  val_batch_size:  2048                 # 验证 batch size (无反向传播,可以更大)
+  num_workers:     8                    # 数据加载并行进程数 (建议 = CPU 核心数)
+  prefetch_factor: 2                    # 每个 worker 预取的 batch 数量
+
+# ── 模型配置 ──────────────────────────────────────────────────────────────────
+model:
+  name:        "resnet34"
+  num_classes: 1000                     # ImageNet=1000, 子集请修改为实际类别数
+
+# ── 训练配置 ──────────────────────────────────────────────────────────────────
+train:
+  epochs:          90                  # 总训练 epoch 数 (ImageNet 标准 90 epochs)
+  base_lr:         0.1                 # 基准学习率 (对应 base_batch_size=256)
+  base_batch_size: 256                 # Linear Scaling Rule 的基准 batch size
+  # 实际 LR = base_lr × (batch_size / base_batch_size) = 0.1 × (1024/256) = 0.4
+
+  momentum:        0.9                 # SGD 动量
+  weight_decay:    1.0e-4              # L2 正则化系数
+  nesterov:        true                # 是否使用 Nesterov 动量
+
+  warmup_epochs:   5                   # 学习率 Warmup 持续 epoch 数
+  min_lr:          1.0e-5              # 余弦退火的最低学习率下限
+
+  label_smoothing: 0.1                 # 标签平滑系数 (0=不使用, 0.1=推荐)
+  max_grad_norm:   null                # 梯度裁剪阈值 (null=不裁剪)
+
+  log_interval:    50                  # 每隔多少 batch 打印一次日志
+  resume:          null                # 断点续训路径, 如 "checkpoints/latest.pth"
+
+# ── 路径配置 ──────────────────────────────────────────────────────────────────
+log_dir:        "logs"
+checkpoint_dir: "checkpoints"
