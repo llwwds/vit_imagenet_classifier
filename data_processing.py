@@ -1,6 +1,6 @@
 # =============================================================================
 # data_processing.py — 数据预处理与加载模块
-# 目标: 以足够快的速度向 GPU 供给数据,保证吞吐量不受 CPU 瓶颈拖累
+# 为 ViT 图像分类项目提供数据增强流水线和高性能 DataLoader
 # 核心策略:
 #   1. pin_memory=True      — 锁页内存,加速 CPU→GPU 数据传输
 #   2. num_workers 多进程   — 并行解码图片,CPU 预处理不成为瓶颈
@@ -10,7 +10,6 @@
 
 import os  # 文件路径操作
 
-import torch  # PyTorch 核心
 import yaml  # 读取 default.yaml 配置文件
 from torch.utils.data import DataLoader  # 数据加载器
 from torchvision import datasets, transforms  # 标准数据集与图像变换
@@ -171,7 +170,7 @@ def build_dataloaders(cfg: dict):
     """
     根据配置字典构建高性能 DataLoader。
 
-    性能优化要点 (针对 RTX 4060 Ti + Batch Size 1024):
+    性能优化要点 (针对 ViT 训练):
     ┌─────────────────────┬───────────────────────────────────────────────────┐
     │ 参数                 │ 作用                                              │
     ├─────────────────────┼───────────────────────────────────────────────────┤

@@ -1,0 +1,8 @@
+# ViT ImageNet 分类项目依赖
+# 安装: pip install -r requirements.txt
+# 注意: PyTorch 建议通过官方渠道安装 (见 README.md)
+
+torch>=2.0.0
+torchvision>=0.15.0
+pyyaml>=6.0
+pillow>=9.0

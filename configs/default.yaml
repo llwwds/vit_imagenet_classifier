@@ -1,40 +1,46 @@
 # =============================================================================
-# configs/default.yaml — ResNet-34 项目配置文件
+# configs/default.yaml — ViT 图像分类项目配置文件
 # 所有超参数集中在此,修改实验时只需改这个文件,无需动代码
 # =============================================================================
 
 # ── 数据配置 ──────────────────────────────────────────────────────────────────
 data:
-  root:            "dataset/imagenet"   # 数据集根目录
-  batch_size:      1024                 # 训练 batch size (FP16 下显存约 10-12GB)
-  val_batch_size:  2048                 # 验证 batch size (无反向传播,可以更大)
+  root:            "dataset/imagenet"   # 数据集根目录 (ImageFolder 格式)
+  batch_size:      128                  # 训练 batch size (16GB 显存下 ViT-Base 推荐)
+  val_batch_size:  256                  # 验证 batch size (无反向传播,可以更大)
   num_workers:     8                    # 数据加载并行进程数 (建议 = CPU 核心数)
   prefetch_factor: 2                    # 每个 worker 预取的 batch 数量
 
-# ── 模型配置 ──────────────────────────────────────────────────────────────────
+# ── 模型配置 (ViT-Base/16) ────────────────────────────────────────────────────
 model:
-  name:        "resnet34"
-  num_classes: 1000                     # ImageNet=1000, 子集请修改为实际类别数
+  name:         "vit_base_patch16"
+  img_size:     224                     # 输入图像分辨率
+  patch_size:   16                      # Patch 大小: 224/16 = 14×14 = 196 个 patch
+  in_channels:  3                       # RGB 三通道
+  num_classes:  1000                    # ImageNet=1000, 子集请修改为实际类别数
+  embed_dim:    768                     # Embedding 维度
+  depth:        12                      # Transformer Block 层数
+  num_heads:    12                      # 多头注意力头数 (768/12 = 64 per head)
+  mlp_ratio:    4.0                     # MLP 隐藏层维度 = embed_dim × mlp_ratio = 3072
+  attn_drop:    0.0                     # 注意力权重 Dropout
+  proj_drop:    0.0                     # 投影层 Dropout
+  drop_path:    0.1                     # DropPath (Stochastic Depth) 最大概率
 
 # ── 训练配置 ──────────────────────────────────────────────────────────────────
 train:
-  epochs:          90                  # 总训练 epoch 数 (ImageNet 标准 90 epochs)
-  base_lr:         0.1                 # 基准学习率 (对应 base_batch_size=256)
-  base_batch_size: 256                 # Linear Scaling Rule 的基准 batch size
-  # 实际 LR = base_lr × (batch_size / base_batch_size) = 0.1 × (1024/256) = 0.4
+  epochs:          300                  # 总训练 epoch 数 (ViT 需要更长训练)
+  lr:              1.0e-3               # 基础学习率 (AdamW 标准)
+  weight_decay:    0.05                 # AdamW 权重衰减 (ViT 标准设置)
+  betas:           [0.9, 0.999]         # AdamW 动量参数
 
-  momentum:        0.9                 # SGD 动量
-  weight_decay:    1.0e-4              # L2 正则化系数
-  nesterov:        true                # 是否使用 Nesterov 动量
+  warmup_epochs:   20                   # 学习率 Warmup 持续 epoch 数
+  min_lr:          1.0e-5               # 余弦退火的最低学习率下限
 
-  warmup_epochs:   5                   # 学习率 Warmup 持续 epoch 数
-  min_lr:          1.0e-5              # 余弦退火的最低学习率下限
+  label_smoothing: 0.1                  # 标签平滑系数
+  max_grad_norm:   1.0                  # 梯度裁剪阈值 (ViT 训练建议开启)
 
-  label_smoothing: 0.1                 # 标签平滑系数 (0=不使用, 0.1=推荐)
-  max_grad_norm:   null                # 梯度裁剪阈值 (null=不裁剪)
-
-  log_interval:    50                  # 每隔多少 batch 打印一次日志
-  resume:          null                # 断点续训路径, 如 "checkpoints/latest.pth"
+  log_interval:    50                   # 每隔多少 batch 打印一次日志
+  resume:          null                 # 断点续训路径, 如 "checkpoints/latest.pth"
 
 # ── 路径配置 ──────────────────────────────────────────────────────────────────
 log_dir:        "logs"
